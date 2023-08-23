@@ -27,7 +27,7 @@ public class CouponService : ICouponService
         return await _baseService.SendAsync(new()
         {
             ApiType = SD.ApiType.GET,
-            Url = $"{SD.CouponAPIBase}{id}"
+            Url = $"{SD.CouponAPIBase}/{id}"
         });
     }
 
@@ -49,7 +49,7 @@ public class CouponService : ICouponService
         return _baseService.SendAsync(new()
         {
             ApiType = SD.ApiType.DELETE,
-            Url = $"{SD.CouponAPIBase}{id}"
+            Url = $"{SD.CouponAPIBase}/{id}"
         });
     }
 }
