@@ -38,4 +38,16 @@ public class AuthController : ControllerBase
 
         return new ResponseDto { IsSuccess = false, Message = "Some data annotation errors" };
     }
+    
+    [HttpPost("assign-role")]
+    public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
+    {
+        var res = await _authService.AssignRoleAsync(model.Email, model.Role.ToUpper());
+        if (res)
+        {
+            return Ok(res);
+        }
+
+        return BadRequest();
+    }
 }

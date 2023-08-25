@@ -84,4 +84,25 @@ public class AuthService : IAuthService
 
         return response;
     }
+
+    public async Task<bool> AssignRoleAsync(string email, string roleName)
+    {
+        var user = await _db.ApplicationUsers.FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
+        if (user != null)
+        {
+            if (!_roleManager.RoleExistsAsync(roleName).GetAwaiter().GetResult())
+            {
+                // create role if it doesn't exist
+                await _roleManager.CreateAsync(new IdentityRole(roleName));
+                
+              
+            }
+            // assign role to user
+            await _userManager.AddToRoleAsync(user, roleName);
+            
+            return true;
+        }
+
+        return false;
+    }
 }
