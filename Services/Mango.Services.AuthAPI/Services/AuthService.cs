@@ -12,12 +12,15 @@ public class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
-    public AuthService(AppDbContext db, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+    public AuthService(AppDbContext db, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager,
+        IJwtTokenGenerator jwtTokenGenerator)
     {
         _db = db;
         _userManager = userManager;
         _roleManager = roleManager;
+        _jwtTokenGenerator = jwtTokenGenerator;
     }
 
     public async Task<ResponseDto> RegisterUserAsync(RegistrationRequestDto userDto)
@@ -45,7 +48,7 @@ public class AuthService : IAuthService
                     Email = createdUser.Email,
                     PhoneNumber = createdUser.PhoneNumber
                 };
-                
+
                 return new ResponseDto { IsSuccess = true, Result = returnUser };
             }
             else
@@ -61,18 +64,21 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto> LoginAsync(LoginRequestDto loginDto)
     {
-        var user = await _db.ApplicationUsers.FirstOrDefaultAsync(x => x.UserName.ToLower() == loginDto.Email.ToLower());
+        var user = await _db.ApplicationUsers.FirstOrDefaultAsync(x =>
+            x.UserName.ToLower() == loginDto.Email.ToLower());
 
         bool isValid = await _userManager.CheckPasswordAsync(user, loginDto.Password);
-        
+
         if (isValid == false)
         {
             return new LoginResponseDto() { User = null, Token = "" };
         }
 
+        var token = _jwtTokenGenerator.GenerateToken(user);
+
         LoginResponseDto response = new LoginResponseDto
         {
-            Token = "",
+            Token = token,
             User = new UserDto { Name = user.Name, Email = user.Email, Id = user.Id, PhoneNumber = user.PhoneNumber },
         };
 
