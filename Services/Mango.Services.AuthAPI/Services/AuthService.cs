@@ -74,15 +74,24 @@ public class AuthService : IAuthService
             return new LoginResponseDto() { User = null, Token = "" };
         }
 
-        var token = _jwtTokenGenerator.GenerateToken(user);
+        var roles = await _userManager.GetRolesAsync(user);
+        var token = _jwtTokenGenerator.GenerateToken(user,roles);
 
-        LoginResponseDto response = new LoginResponseDto
+        UserDto userDTO = new()
         {
-            Token = token,
-            User = new UserDto { Name = user.Name, Email = user.Email, Id = user.Id, PhoneNumber = user.PhoneNumber },
+            Email = user.Email,
+            Id = user.Id,
+            Name = user.Name,
+            PhoneNumber = user.PhoneNumber
         };
 
-        return response;
+        LoginResponseDto loginResponseDto = new LoginResponseDto()
+        {
+            User = userDTO,
+            Token = token
+        };
+
+        return loginResponseDto;
     }
 
     public async Task<bool> AssignRoleAsync(string email, string roleName)

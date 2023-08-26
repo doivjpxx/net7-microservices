@@ -17,29 +17,31 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         _jwtOptions = jwtOptions.Value;
     }
     
-    public string GenerateToken(ApplicationUser applicationUser)
+    public string GenerateToken(ApplicationUser applicationUser, IEnumerable<string> roles)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        
+
         var key = Encoding.ASCII.GetBytes(_jwtOptions.Secret);
-        
+
+        var claimList = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Email,applicationUser.Email),
+            new Claim(JwtRegisteredClaimNames.Sub,applicationUser.Id),
+            new Claim(JwtRegisteredClaimNames.Name,applicationUser.UserName)
+        };
+
+        claimList.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Issuer = _jwtOptions.Issuer,
             Audience = _jwtOptions.Audience,
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, applicationUser.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, applicationUser.Email),
-                new Claim("id", applicationUser.Id)
-            }),
-            Expires = DateTime.UtcNow.AddHours(6),
+            Issuer = _jwtOptions.Issuer,
+            Subject = new ClaimsIdentity(claimList),
+            Expires = DateTime.UtcNow.AddDays(7),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
-        
+
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        
         return tokenHandler.WriteToken(token);
     }
 }

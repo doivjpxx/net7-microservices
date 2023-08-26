@@ -24,21 +24,28 @@ public class AuthController : ControllerBase
             return BadRequest();
         }
 
-        return Ok(res);
+        return Ok(new ResponseDto
+        {
+            Result = res,
+            IsSuccess = true,
+            Message = "Login Successful"
+        });
     }
-    
+
     [HttpPost("register")]
     public async Task<ResponseDto> Register([FromBody] RegistrationRequestDto model)
     {
         if (ModelState.IsValid)
         {
             var result = await _authService.RegisterUserAsync(model);
-            return result.IsSuccess ? new ResponseDto { IsSuccess = true } : new ResponseDto { IsSuccess = false, Message = result.Message };
+            return result.IsSuccess
+                ? new ResponseDto { IsSuccess = true }
+                : new ResponseDto { IsSuccess = false, Message = result.Message };
         }
 
         return new ResponseDto { IsSuccess = false, Message = "Some data annotation errors" };
     }
-    
+
     [HttpPost("assign-role")]
     public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
     {
