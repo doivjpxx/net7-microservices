@@ -10,8 +10,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IBaseService, BaseService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 SD.CouponAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:CouponAPI");
+SD.AuthAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:AuthAPI");
 
 var app = builder.Build();
 
