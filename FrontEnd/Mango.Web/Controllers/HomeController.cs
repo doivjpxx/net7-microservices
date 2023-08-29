@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Mango.Web.Models;
+using Mango.Web.Utils;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Mango.Web.Controllers;
 
@@ -18,6 +20,7 @@ public class HomeController : Controller
         return View();
     }
 
+    [Authorize(Roles = SD.RoleAdmin)]
     public IActionResult Privacy()
     {
         return View();
