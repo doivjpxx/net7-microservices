@@ -65,6 +65,7 @@ public class CouponController : ControllerBase
     }
     
     [HttpPost]
+    [Authorize(Roles = "ADMIN")]
     public async Task<ResponseDto> CreateCouponAsync([FromBody] CouponDto couponDto)
     {
         var coupon = _mapper.Map<Coupon>(couponDto);
@@ -81,6 +82,7 @@ public class CouponController : ControllerBase
     }
     
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "ADMIN")]
     public async Task<ResponseDto> DeleteCouponAsync(int id)
     {
         try
