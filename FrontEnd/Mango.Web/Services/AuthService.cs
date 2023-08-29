@@ -20,7 +20,7 @@ public class AuthService : IAuthService
             ApiType = SD.ApiType.POST,
             Data = request,
             Url = SD.AuthAPIBase + "/login"
-        });
+        }, withToken: false);
 
         return res;
     }
@@ -32,7 +32,7 @@ public class AuthService : IAuthService
             ApiType = SD.ApiType.POST,
             Data = request,
             Url = SD.AuthAPIBase + "/register"
-        });
+        }, withToken: false);
 
         return res;
     }
