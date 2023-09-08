@@ -8,10 +8,9 @@ public class MappingConfig
 {
     public static MapperConfiguration RegisterMaps()
     {
-        MapperConfiguration mappingConfig = new(config =>
+        var mappingConfig = new MapperConfiguration (config =>
         {
-            config.CreateMap<Product, ProductDto>().ReverseMap();
-            config.CreateMap<ProductDto, ResponseDto>().ReverseMap();
+            config.CreateMap<ProductDto, Product>().ReverseMap();
         });
 
         return mappingConfig;

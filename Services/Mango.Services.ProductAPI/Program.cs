@@ -1,6 +1,7 @@
 using AutoMapper;
 using Mango.Services.ProductAPI;
 using Mango.Services.ProductAPI.Data;
+using Mango.Services.ProductAPI.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
@@ -46,6 +47,9 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
+
+// From extensions method
+builder.AddAppAuthentication();
 
 var app = builder.Build();
 
