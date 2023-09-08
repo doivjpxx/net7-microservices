@@ -11,6 +11,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IBaseService, BaseService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -23,6 +24,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 SD.CouponAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:CouponAPI");
 SD.AuthAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:AuthAPI");
+SD.ProductAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:ProductAPI");
 
 var app = builder.Build();
 
