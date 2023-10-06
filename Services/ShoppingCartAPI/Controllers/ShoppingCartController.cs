@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Models;
+using ShoppingCartAPI.Services;
 
 namespace ShoppingCartAPI.Controllers;
 
@@ -15,12 +16,15 @@ public class ShoppingCartController : ControllerBase
     private IMapper _mapper;
     private readonly AppDbContext _context;
     private ResponseDto _response;
+    private readonly IProductService _productService;
 
-    public ShoppingCartController(AppDbContext context, IMapper mapper, ResponseDto response)
+    public ShoppingCartController(AppDbContext context, IMapper mapper, ResponseDto response,
+        IProductService productService)
     {
         _context = context;
         _mapper = mapper;
         _response = response;
+        _productService = productService;
     }
 
     [HttpGet("GetCart/{userId}")]
@@ -30,17 +34,21 @@ public class ShoppingCartController : ControllerBase
         {
             var cart = new CartDto
             {
-                CartHeader = _mapper.Map<CartHeaderDto>(await _context.CartHeaders.FirstOrDefaultAsync(u => u.UserId == userId)),
+                CartHeader =
+                    _mapper.Map<CartHeaderDto>(await _context.CartHeaders.FirstOrDefaultAsync(u => u.UserId == userId)),
             };
             cart.CartDetails =
                 _mapper.Map<IEnumerable<CartDetailsDto>>(_context.CartDetails.Where(u =>
                     u.CartHeader.UserId == userId));
+            
+            IEnumerable<ProductDto> productDtos = await _productService.GetProducts();
 
             foreach (var item in cart.CartDetails)
             {
+                item.Product = productDtos.FirstOrDefault(u => u.ProductId == item.ProductId);
                 cart.CartHeader.CartTotal += item.Product.Price * item.Count;
             }
-            
+
             _response.IsSuccess = true;
             _response.Result = cart;
         }
