@@ -61,6 +61,58 @@ public class ShoppingCartController : ControllerBase
         return _response;
     }
 
+    [HttpPost("ApplyCoupon")]
+    public async Task<object> ApplyCoupon([FromBody] CartDto cartDto)
+    {
+        try
+        {
+            var cartFromDb =
+                _context.CartHeaders.FirstOrDefault(u => u.CartHeaderId == cartDto.CartHeader.CartHeaderId);
+
+            if (cartFromDb == null)
+            {
+                return BadRequest();
+            }
+
+            cartFromDb.CouponCode = cartDto.CartHeader.CouponCode;
+            _context.CartHeaders.Update(cartFromDb);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            _response.IsSuccess = false;
+            _response.Message = e.Message;
+        }
+
+        return _response;
+    }
+    
+    [HttpPost("RemoveCoupon")]
+    public async Task<object> RemoveCoupon([FromBody] CartDto cartDto)
+    {
+        try
+        {
+            var cartFromDb =
+                _context.CartHeaders.FirstOrDefault(u => u.CartHeaderId == cartDto.CartHeader.CartHeaderId);
+
+            if (cartFromDb == null)
+            {
+                return BadRequest();
+            }
+
+            cartFromDb.CouponCode = "";
+            _context.CartHeaders.Update(cartFromDb);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            _response.IsSuccess = false;
+            _response.Message = e.Message;
+        }
+
+        return _response;
+    }
+    
     [HttpPost("CartUpsert")]
     public async Task<ResponseDto> CartUpsert(CartDto cartDto)
     {
