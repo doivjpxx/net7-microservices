@@ -13,18 +13,20 @@ namespace ShoppingCartAPI.Controllers;
 [Route("api/cart")]
 public class ShoppingCartController : ControllerBase
 {
-    private IMapper _mapper;
+    private readonly IMapper _mapper;
     private readonly AppDbContext _context;
-    private ResponseDto _response;
+    private readonly ResponseDto _response;
     private readonly IProductService _productService;
+    private readonly ICouponService _couponService;
 
     public ShoppingCartController(AppDbContext context, IMapper mapper, ResponseDto response,
-        IProductService productService)
+        IProductService productService, ICouponService couponService)
     {
         _context = context;
         _mapper = mapper;
         _response = response;
         _productService = productService;
+        _couponService = couponService;
     }
 
     [HttpGet("GetCart/{userId}")]
@@ -40,13 +42,23 @@ public class ShoppingCartController : ControllerBase
             cart.CartDetails =
                 _mapper.Map<IEnumerable<CartDetailsDto>>(_context.CartDetails.Where(u =>
                     u.CartHeader.UserId == userId));
-            
+
             IEnumerable<ProductDto> productDtos = await _productService.GetProducts();
 
             foreach (var item in cart.CartDetails)
             {
                 item.Product = productDtos.FirstOrDefault(u => u.ProductId == item.ProductId);
                 cart.CartHeader.CartTotal += item.Product.Price * item.Count;
+            }
+            
+            if (!string.IsNullOrEmpty(cart.CartHeader.CouponCode))
+            {
+                var coupon = await _couponService.GetCoupon(cart.CartHeader.CouponCode);
+                if (coupon != null && cart.CartHeader.CartTotal > coupon.MinAmount)
+                {
+                    cart.CartHeader.CartTotal -= coupon.DiscountAmount;
+                    cart.CartHeader.Discount = coupon.DiscountAmount;
+                }
             }
 
             _response.IsSuccess = true;
@@ -86,7 +98,7 @@ public class ShoppingCartController : ControllerBase
 
         return _response;
     }
-    
+
     [HttpPost("RemoveCoupon")]
     public async Task<object> RemoveCoupon([FromBody] CartDto cartDto)
     {
@@ -112,7 +124,7 @@ public class ShoppingCartController : ControllerBase
 
         return _response;
     }
-    
+
     [HttpPost("CartUpsert")]
     public async Task<ResponseDto> CartUpsert(CartDto cartDto)
     {
