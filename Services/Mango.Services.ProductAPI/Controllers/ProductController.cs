@@ -97,8 +97,8 @@ public class ProductController : ControllerBase
             //     product.ImageUrl = "https://placehold.co/600x400";
             // }
 
-            _context.Products.Update(product);
-            _context.SaveChanges();
+            // _context.Products.Update(product);
+            // _context.SaveChanges();
             _response.Result = _mapper.Map<ProductDto>(product);
         }
         catch (Exception e)
