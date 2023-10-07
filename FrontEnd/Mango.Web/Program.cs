@@ -13,6 +13,7 @@ builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -25,6 +26,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 SD.CouponAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:CouponAPI");
 SD.AuthAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:AuthAPI");
 SD.ProductAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:ProductAPI");
+SD.ShoppingCartAPIBase = builder.Configuration.GetValue<string>("ServiceUrls:ShoppingCartAPI");
 
 var app = builder.Build();
 

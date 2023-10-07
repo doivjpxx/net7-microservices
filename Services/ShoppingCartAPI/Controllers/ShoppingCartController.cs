@@ -10,7 +10,7 @@ using ShoppingCartAPI.Services;
 namespace ShoppingCartAPI.Controllers;
 
 [ApiController]
-[Route("api/cart")]
+[Route("api/Cart")]
 public class ShoppingCartController : ControllerBase
 {
     private readonly IMapper _mapper;
