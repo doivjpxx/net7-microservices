@@ -15,18 +15,18 @@ public class ShoppingCartController : ControllerBase
 {
     private readonly IMapper _mapper;
     private readonly AppDbContext _context;
-    private readonly ResponseDto _response;
+    private ResponseDto _response;
     private readonly IProductService _productService;
     private readonly ICouponService _couponService;
 
-    public ShoppingCartController(AppDbContext context, IMapper mapper, ResponseDto response,
+    public ShoppingCartController(AppDbContext context, IMapper mapper,
         IProductService productService, ICouponService couponService)
     {
         _context = context;
         _mapper = mapper;
-        _response = response;
         _productService = productService;
         _couponService = couponService;
+        _response = new ResponseDto();
     }
 
     [HttpGet("GetCart/{userId}")]
@@ -128,57 +128,53 @@ public class ShoppingCartController : ControllerBase
     [HttpPost("CartUpsert")]
     public async Task<ResponseDto> CartUpsert(CartDto cartDto)
     {
-        try
-        {
-            var cartHeaderFromDb =
-                await _context.CartHeaders.AsNoTracking()
+            try
+            {
+                var cartHeaderFromDb = await _context.CartHeaders.AsNoTracking()
                     .FirstOrDefaultAsync(u => u.UserId == cartDto.CartHeader.UserId);
-
-            if (cartHeaderFromDb == null)
-            {
-                // create header and details
-                var cartHeader = _mapper.Map<CartHeader>(cartDto.CartHeader);
-                _context.CartHeaders.Add(cartHeader);
-
-                cartDto.CartDetails.First().CartHeaderId = cartHeader.CartHeaderId;
-                _context.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails));
-                await _context.SaveChangesAsync();
-            }
-            else
-            {
-                var cartDetailsFromDb = await _context.CartDetails.AsNoTracking().FirstOrDefaultAsync(u =>
-                    u.ProductId == cartDto.CartDetails.First().ProductId &&
-                    u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
-
-                if (cartDetailsFromDb == null)
+                if (cartHeaderFromDb == null)
                 {
-                    // create cartdetails
-                    cartDto.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
+                    //create header and details
+                    CartHeader cartHeader = _mapper.Map<CartHeader>(cartDto.CartHeader);
+                    _context.CartHeaders.Add(cartHeader);
+                    await _context.SaveChangesAsync();
+                    cartDto.CartDetails.First().CartHeaderId = cartHeader.CartHeaderId;
                     _context.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
                     await _context.SaveChangesAsync();
                 }
                 else
                 {
-                    // update count in cart details
-                    cartDto.CartDetails.First().Count += cartDetailsFromDb.Count;
-                    cartDto.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
-                    cartDto.CartDetails.First().CartDetailsId = cartDetailsFromDb.CartDetailsId;
-                    _context.CartDetails.Update(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
-                    await _context.SaveChangesAsync();
+                    //if header is not null
+                    //check if details has same product
+                    var cartDetailsFromDb = await _context.CartDetails.AsNoTracking().FirstOrDefaultAsync(
+                        u => u.ProductId == cartDto.CartDetails.First().ProductId &&
+                        u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
+                    if (cartDetailsFromDb == null)
+                    {
+                        //create cartdetails
+                        cartDto.CartDetails.First().CartHeaderId = cartHeaderFromDb.CartHeaderId;
+                        _context.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        //update count in cart details
+                        cartDto.CartDetails.First().Count += cartDetailsFromDb.Count;
+                        cartDto.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
+                        cartDto.CartDetails.First().CartDetailsId = cartDetailsFromDb.CartDetailsId;
+                        _context.CartDetails.Update(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
+                        await _context.SaveChangesAsync();
+                    }
                 }
+                _response.Result = cartDto;
             }
-
-            _response.IsSuccess = true;
-            _response.Result = cartDto;
+            catch (Exception ex)
+            {
+                _response.Message= ex.Message.ToString();
+                _response.IsSuccess= false;
+            }
+            return _response;
         }
-        catch (Exception e)
-        {
-            _response.Message = e.Message.ToString();
-            _response.IsSuccess = false;
-        }
-
-        return _response;
-    }
 
     [HttpPost("RemoveCart")]
     public async Task<ResponseDto> RemoveCart([FromBody] int cartDetailsId)
