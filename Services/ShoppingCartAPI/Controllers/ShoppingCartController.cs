@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Mango.Services.ShoppingCart.Models.Dtos;
 using Mango.Services.ShoppingCartAPI.Models.Dto;
+using MessageBus;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShoppingCartAPI.Data;
@@ -14,19 +15,24 @@ namespace ShoppingCartAPI.Controllers;
 public class ShoppingCartController : ControllerBase
 {
     private readonly IMapper _mapper;
+    private readonly IConfiguration _configuration;
     private readonly AppDbContext _context;
     private readonly ResponseDto _response;
     private readonly IProductService _productService;
     private readonly ICouponService _couponService;
+    private readonly IMessageProducer _messageProducer;
 
     public ShoppingCartController(AppDbContext context, IMapper mapper, ResponseDto response,
-        IProductService productService, ICouponService couponService)
+        IProductService productService, ICouponService couponService, IMessageProducer messageProducer,
+        IConfiguration configuration)
     {
         _context = context;
         _mapper = mapper;
         _response = response;
         _productService = productService;
         _couponService = couponService;
+        _messageProducer = messageProducer;
+        _configuration = configuration;
     }
 
     [HttpGet("GetCart/{userId}")]
@@ -50,7 +56,7 @@ public class ShoppingCartController : ControllerBase
                 item.Product = productDtos.FirstOrDefault(u => u.ProductId == item.ProductId);
                 cart.CartHeader.CartTotal += item.Product.Price * item.Count;
             }
-            
+
             if (!string.IsNullOrEmpty(cart.CartHeader.CouponCode))
             {
                 var coupon = await _couponService.GetCoupon(cart.CartHeader.CouponCode);
@@ -94,6 +100,24 @@ public class ShoppingCartController : ControllerBase
         {
             _response.IsSuccess = false;
             _response.Message = e.Message;
+        }
+
+        return _response;
+    }
+
+    [HttpPost("EmailCartRequest")]
+    public async Task<object> EmailCartRequest([FromBody] CartDto cartDto)
+    {
+        try
+        {
+            await _messageProducer.PublishMessage(cartDto,
+                _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCartQueue"));
+            _response.Result = true;
+        }
+        catch (Exception ex)
+        {
+            _response.IsSuccess = false;
+            _response.Message = ex.ToString();
         }
 
         return _response;

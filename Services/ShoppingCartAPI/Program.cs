@@ -1,4 +1,5 @@
 using AutoMapper;
+using MessageBus;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using ShoppingCartAPI;
@@ -17,6 +18,7 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
+builder.Services.AddScoped<IMessageProducer, MessageProducer>();
 builder.Services.AddScoped<BackendApiAuthenticationHttpClientHandler>();
 
 builder.Services.AddHttpClient("Product",
