@@ -1,13 +1,21 @@
 using AutoMapper;
 using MessageBus;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ShoppingCartAPI;
+using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Extensions;
 using ShoppingCartAPI.Services;
 using ShoppingCartAPI.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddDbContext<AppDbContext>(option =>
+{
+    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 // Add services to the container.
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();

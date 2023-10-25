@@ -22,13 +22,13 @@ public class ShoppingCartController : ControllerBase
     private readonly ICouponService _couponService;
     private readonly IMessageProducer _messageProducer;
 
-    public ShoppingCartController(AppDbContext context, IMapper mapper, ResponseDto response,
+    public ShoppingCartController(AppDbContext context, IMapper mapper,
         IProductService productService, ICouponService couponService, IMessageProducer messageProducer,
         IConfiguration configuration)
     {
         _context = context;
         _mapper = mapper;
-        _response = response;
+        _response = new ResponseDto();
         _productService = productService;
         _couponService = couponService;
         _messageProducer = messageProducer;
@@ -154,36 +154,35 @@ public class ShoppingCartController : ControllerBase
     {
         try
         {
-            var cartHeaderFromDb =
-                await _context.CartHeaders.AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.UserId == cartDto.CartHeader.UserId);
-
+            var cartHeaderFromDb = await _context.CartHeaders.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == cartDto.CartHeader.UserId);
             if (cartHeaderFromDb == null)
             {
-                // create header and details
-                var cartHeader = _mapper.Map<CartHeader>(cartDto.CartHeader);
+                //create header and details
+                CartHeader cartHeader = _mapper.Map<CartHeader>(cartDto.CartHeader);
                 _context.CartHeaders.Add(cartHeader);
-
+                await _context.SaveChangesAsync();
                 cartDto.CartDetails.First().CartHeaderId = cartHeader.CartHeaderId;
-                _context.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails));
+                _context.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
                 await _context.SaveChangesAsync();
             }
             else
             {
-                var cartDetailsFromDb = await _context.CartDetails.AsNoTracking().FirstOrDefaultAsync(u =>
-                    u.ProductId == cartDto.CartDetails.First().ProductId &&
-                    u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
-
+                //if header is not null
+                //check if details has same product
+                var cartDetailsFromDb = await _context.CartDetails.AsNoTracking().FirstOrDefaultAsync(
+                    u => u.ProductId == cartDto.CartDetails.First().ProductId &&
+                         u.CartHeaderId == cartHeaderFromDb.CartHeaderId);
                 if (cartDetailsFromDb == null)
                 {
-                    // create cartdetails
-                    cartDto.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
+                    //create cartdetails
+                    cartDto.CartDetails.First().CartHeaderId = cartHeaderFromDb.CartHeaderId;
                     _context.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));
                     await _context.SaveChangesAsync();
                 }
                 else
                 {
-                    // update count in cart details
+                    //update count in cart details
                     cartDto.CartDetails.First().Count += cartDetailsFromDb.Count;
                     cartDto.CartDetails.First().CartHeaderId = cartDetailsFromDb.CartHeaderId;
                     cartDto.CartDetails.First().CartDetailsId = cartDetailsFromDb.CartDetailsId;
@@ -192,17 +191,17 @@ public class ShoppingCartController : ControllerBase
                 }
             }
 
-            _response.IsSuccess = true;
             _response.Result = cartDto;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            _response.Message = e.Message.ToString();
+            _response.Message = ex.Message.ToString();
             _response.IsSuccess = false;
         }
 
         return _response;
     }
+
 
     [HttpPost("RemoveCart")]
     public async Task<ResponseDto> RemoveCart([FromBody] int cartDetailsId)

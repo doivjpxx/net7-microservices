@@ -6,9 +6,9 @@ namespace Mango.Web.Services;
 
 public class CartService : ICartService
 {
-    private readonly BaseService _baseService;
+    private readonly IBaseService _baseService;
     
-    public CartService(BaseService baseService)
+    public CartService(IBaseService baseService)
     {
         _baseService = baseService;
     }
