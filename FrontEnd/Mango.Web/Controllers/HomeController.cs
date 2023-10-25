@@ -1,12 +1,11 @@
 ﻿using System.Diagnostics;
-using System.Security.Claims;
-using IdentityModel;
 using Microsoft.AspNetCore.Mvc;
 using Mango.Web.Models;
 using Mango.Web.Services.IServices;
 using Mango.Web.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Newtonsoft.Json;
+using IdentityModel;
 
 namespace Mango.Web.Controllers;
 
@@ -40,7 +39,7 @@ public class HomeController : Controller
 
         return View(list);
     }
-
+    
     [Authorize]
     public async Task<IActionResult> ProductDetails(int productId)
     {
@@ -96,8 +95,6 @@ public class HomeController : Controller
 
         return View(productDto);
     }
-
-
 
     [Authorize(Roles = SD.RoleAdmin)]
     public IActionResult Privacy()

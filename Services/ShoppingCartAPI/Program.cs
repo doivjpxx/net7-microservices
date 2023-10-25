@@ -1,4 +1,5 @@
 using AutoMapper;
+using MessageBus;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -6,6 +7,7 @@ using ShoppingCartAPI;
 using ShoppingCartAPI.Data;
 using ShoppingCartAPI.Extensions;
 using ShoppingCartAPI.Services;
+using ShoppingCartAPI.Utility;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +17,6 @@ builder.Services.AddDbContext<AppDbContext>(option =>
     option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-
 // Add services to the container.
 IMapper mapper = MappingConfig.RegisterMaps().CreateMapper();
 
@@ -23,14 +24,18 @@ builder.Services.AddSingleton(mapper);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddHttpClient("Product",
-    client => client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]));
-
-builder.Services.AddHttpClient("Coupon",
-    client => client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]));
-
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
+builder.Services.AddScoped<IMessageProducer, MessageProducer>();
+builder.Services.AddScoped<BackendApiAuthenticationHttpClientHandler>();
+
+builder.Services.AddHttpClient("Product",
+        client => client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:ProductAPI"]))
+    .AddHttpMessageHandler<BackendApiAuthenticationHttpClientHandler>();
+
+builder.Services.AddHttpClient("Coupon",
+    client => client.BaseAddress = new Uri(builder.Configuration["ServiceUrls:CouponAPI"]))
+    .AddHttpMessageHandler<BackendApiAuthenticationHttpClientHandler>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -67,19 +72,14 @@ builder.AddAppAuthentication();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+if (app.Environment.IsDevelopment())
 {
-    if (!app.Environment.IsDevelopment())
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Cart API");
-        c.RoutePrefix = string.Empty;
-    }
-});
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

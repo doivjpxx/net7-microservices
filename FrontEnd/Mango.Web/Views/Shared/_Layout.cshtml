@@ -23,8 +23,9 @@
             <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
                     <li class="nav-item">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        <a class="nav-link " asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                     </li>
+                                        
                     @if (User.IsInRole(SD.RoleAdmin))
                     {
                         <li class="nav-item dropdown">
@@ -32,15 +33,9 @@
                                 Content Management
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Coupon" asp-action="Index">Coupon</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Product" asp-action="Index">Product</a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
+                                <li><a class="dropdown-item" asp-controller="Coupon" asp-action="Index">Coupon</a></li>
+                                <li><a class="dropdown-item" asp-controller="Product" asp-action="Index">Product</a></li>
+                                <li><hr class="dropdown-divider"></li>
                             </ul>
                         </li>
                     }
